@@ -19,7 +19,6 @@ def get_current_weather(address):
 def search_product(product_name: str):
     """Returns E-commerce Products whose name contains the query string (case-insensitive)"""
     """
-    Fetch products from the local Flask API filtered by product name.
     Args:
         product_name (str): Name or partial name of the product to search.
     Returns:
@@ -30,3 +29,37 @@ def search_product(product_name: str):
     response = requests.get(url, params=params)
 
     return json.dumps(response.json(), indent=2)
+
+def get_crypto_price(crypto_name: str) -> str:
+    """Returns the current cryptocurrency price in USD."""
+    """
+    Args:
+        symbol (str): The cryptocurrency symbol (e.g., 'BTC', 'ETH').
+    Returns:
+        str: A formatted string with the current price or an error message.
+    """
+    try:
+        url = f"https://api.coingecko.com/api/v3/simple/price"
+        params = {
+            "ids": crypto_name.lower(),
+            "vs_currencies": "usd"
+        }
+        response = requests.get(url, params=params)
+
+        if response.status_code != 200:
+            return json.dumps({"error": f"Error fetching data: {response.status_code}"})
+
+        data = response.json()
+        if crypto_name.lower() not in data:
+            return json.dumps({"error": f"Sorry, I couldn’t find price data for '{crypto_name.upper()}'."})
+
+        price = data[crypto_name.lower()]["usd"]
+        return json.dumps({f"{crypto_name.upper()}": f"{price:,.2f} USD"})
+
+    except Exception as e:
+        return json.dumps({"error": f"Error: {str(e)}"})
+
+def get_joke() -> str:
+    """Return a random joke."""
+    response = requests.get("https://official-joke-api.appspot.com/random_joke").json()
+    return json.dumps({"joke": f"{response['setup']} - {response['punchline']}"})

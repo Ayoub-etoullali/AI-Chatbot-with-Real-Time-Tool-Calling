@@ -1,19 +1,32 @@
 import json, requests
 
-def get_product_by_name(product_name: str):
-    """Get available E-commerce Products by product name"""
+def get_crypto_price(symbol: str) -> str:
+    """Returns the current cryptocurrency price in USD."""
     """
-    Fetch products from the local Flask API filtered by product name.
     Args:
-        product_name (str): Name or partial name of the product to search.
+        symbol (str): The cryptocurrency symbol (e.g., 'BTC', 'ETH').
     Returns:
-        list: List of matching products with their symbol, name, price, and currency.
+        str: A formatted string with the current price or an error message.
     """
-    url = "http://127.0.0.1:5000/search_product"
-    params = {"query": product_name}
-    response = requests.get(url, params=params)
+    try:
+        url = f"https://api.coingecko.com/api/v3/simple/price"
+        params = {
+            "ids": symbol.lower(),
+            "vs_currencies": "usd"
+        }
+        response = requests.get(url, params=params)
 
-    return json.dumps(response.json(), indent=2)
-    
-filtered = get_product_by_name('Portablee')
-print(filtered)
+        if response.status_code != 200:
+            return f"Error fetching data: {response.status_code}"
+
+        data = response.json()
+        if symbol.lower() not in data:
+            return f"Sorry, I couldn’t find price data for '{symbol.upper()}'."
+
+        price = data[symbol.lower()]["usd"]
+        return f"The current price of {symbol.upper()} is ${price:,.2f} USD."
+
+    except Exception as e:
+        return f"Error: {str(e)}"
+  
+print(get_crypto_price("Ethereum"))

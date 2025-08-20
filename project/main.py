@@ -10,12 +10,16 @@ from app import run
 
 user_inputs = [
     # General
-    "Hi",
-    "i need help",
+    # "Hi",
+    # "can you help me",
     # get_current_weather
-    "give me the weather now in errachidia",
+    # "give me the weather now in errachidia",
     # search_product
-    "give me Headphone products",
+    # "give me Headphone products",
+    # get_crypto_price
+    "give me the current price of BITCOIN",
+    # get_joke
+    "give me a joke"
 ]
 
 for user_input in user_inputs:

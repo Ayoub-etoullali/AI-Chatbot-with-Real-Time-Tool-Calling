@@ -1,21 +1,25 @@
 import ollama, json
-from functions import get_current_weather, search_product
+from functions import get_current_weather, search_product, get_crypto_price, get_joke
 
 # --- Async assistant runner ---
 async def run(model: str, user_input: str):
     client = ollama.AsyncClient()
     messages = [
         {
-            "role": "system",
-            "content": (
-                "You are a helpful assistant. "
-                "Only call tools if the user explicitly asks for **E-Commerce Products**. "
-                "When showing results from tools, answer briefly and clearly. "
-                "Do not mention datasets, tables, or add extra explanations. "
-                "If the user says something like 'hi', 'hello', or general chat, just respond normally without tools."
-            ),
+            'role': 'system',
+            'content': """
+                You are a helpful assistant. Only call tools if the user explicitly asks for:
+                **Weather**, **E-Commerce Products**, **Crypto Prices**, **Joke**.
+
+                Return the content exactly as is, without adding extra commentary. 
+                Do not mention datasets, tables, or add extra explanations.
+                If the user says something like 'hi', 'hello', or general chat, just respond normally without tools.
+            """
         },
-        {"role": "user", "content": user_input},
+        {
+            "role": "user", 
+            "content": user_input
+        }
     ]
 
     tools = [
@@ -52,6 +56,30 @@ async def run(model: str, user_input: str):
                     "required": ["product_name"],
                 },
             },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_crypto_price",
+                "description": "Returns the current cryptocurrency price in USD.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "crypto_name": {
+                            "type": "string",
+                            "description": "The cryptocurrency name (e.g. 'Ethereum', 'Bitcoin', 'Tether', etc)"
+                            }
+                    },
+                    "required": ["crypto_name"],
+                },
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_joke",
+                "description": "Return a random joke.",
+                }
         }
     ]
 
@@ -70,6 +98,8 @@ async def run(model: str, user_input: str):
     available_functions = {
         "get_current_weather": get_current_weather,
         "search_product": search_product,
+        "get_crypto_price": get_crypto_price,
+        "get_joke": get_joke
     }
 
     for tool in response["message"]["tool_calls"]:
@@ -86,6 +116,10 @@ async def run(model: str, user_input: str):
             # if not func_args["product_name"]:
             #     func_args["product_name"] = "Headphones"
             function_response = function_to_call(func_args["product_name"])
+        elif func_name == "get_crypto_price":
+            # if not func_args["crypto_name"]:
+            #     func_args["crypto_name"] = "Ethereum"
+            function_response = function_to_call(func_args["crypto_name"])
         else:
             # Extract parameters if present
             # params = tool["function"].get("parameters", {})
@@ -94,7 +128,32 @@ async def run(model: str, user_input: str):
             
         print("\nFunction Response:", function_response)
 
-    messages.append({"role": "tool", "content": json.dumps(function_response)})
+    messages.append(
+        {
+            "role": "tool", 
+            "tool_name": func_name,
+            "content": json.dumps(function_response)
+        }
+    )
 
+    messages = [
+        {
+            'role': 'system',
+            'content': """
+                You are a helpful assistant. Only call tools if the user explicitly asks for:
+                **Weather**, **E-Commerce Products**, **Crypto Prices**, **Joke**.
+
+                Do not mention datasets, tables, or add extra explanations.
+                If the user says something like 'hi', 'hello', or general chat, just respond normally without tools.
+            """
+        },
+        {
+            'role': 'user',
+            'content': f"""
+                Question: {user_input}
+                repharse well the Answer from "{function_response}" as a helpful assistant
+            """
+        }
+    ]
     response = await client.chat(model=model, messages=messages)
     print("\nAssistant (with tool call):", response["message"]["content"])
