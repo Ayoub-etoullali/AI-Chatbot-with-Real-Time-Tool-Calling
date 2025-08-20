@@ -1,8 +1,23 @@
-import json
-import requests
+import requests, json, os
+from params import get_coords_from_address
 
-def get_product_by_name(product_name: str):
-    """Get available E-commerce Products by product name"""
+def get_current_weather(address):
+    """Get the current weather in a given city or address name"""
+    latitude, longitude = get_coords_from_address(address)
+    base = "https://api.openweathermap.org/data/2.5/weather"
+    key = os.environ['WEATHERMAP_API_KEY']
+    request_url = f"{base}?lat={latitude}&lon={longitude}&appid={key}&units=metric"
+    response = requests.get(request_url)
+    
+    result = {
+        "latitude": latitude,
+        "longitude": longitude,
+        **response.json()["main"]
+    }
+    return json.dumps(result)
+
+def search_product(product_name: str):
+    """Returns E-commerce Products whose name contains the query string (case-insensitive)"""
     """
     Fetch products from the local Flask API filtered by product name.
     Args:

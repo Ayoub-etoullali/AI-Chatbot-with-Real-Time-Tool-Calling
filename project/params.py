@@ -1,5 +1,26 @@
 import pandas as pd
-import random
+import random, requests
+
+######################################## Address Coordinate
+
+def get_coords_from_address(address):
+    url = "https://nominatim.openstreetmap.org/search"
+    param = {
+        "q": address,
+        "format": "json",
+        "limit": 1
+    }
+    headers = {
+        "User-Agent": "AYOUB/1.0"  # Nominatim requires a User-Agent
+    }
+    response = requests.get(url, params=param, headers=headers)
+    data = response.json()
+    if data:
+        lat = float(data[0]["lat"])
+        lon = float(data[0]["lon"])
+        return str(lat)+","+str(lon)
+    else:
+        return None
 
 ######################################## E-Commerce Products
 

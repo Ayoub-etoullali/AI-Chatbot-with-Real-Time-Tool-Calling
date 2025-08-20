@@ -1,5 +1,5 @@
 import ollama, json
-from functions import get_product_by_name
+from functions import get_current_weather, search_product
 
 # --- Async assistant runner ---
 async def run(model: str, user_input: str):
@@ -22,8 +22,25 @@ async def run(model: str, user_input: str):
         {
             "type": "function",
             "function": {
-                "name": "get_product_by_name",
-                "description": "Get available E-commerce Products by product name",
+                "name": "get_current_weather",
+                "description": "Get the current weather in a given city or address name",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "address_name": {
+                        "type": "string",
+                        "description": "The city or address name of a place",
+                        }
+                    },
+                    "required": ["address_name"]
+                },
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "search_product",
+                "description": "Returns E-commerce Products whose name contains the query string (case-insensitive)",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -51,7 +68,8 @@ async def run(model: str, user_input: str):
     messages.append(response["message"])
 
     available_functions = {
-        "get_product_by_name": get_product_by_name,
+        "get_current_weather": get_current_weather,
+        "search_product": search_product,
     }
 
     for tool in response["message"]["tool_calls"]:
@@ -60,7 +78,11 @@ async def run(model: str, user_input: str):
         func_args = tool["function"]["arguments"]
         function_to_call = available_functions[func_name]
         
-        if func_name == "get_product_by_name":
+        if func_name == "get_current_weather":
+            # if not func_args["address_name"]:
+            #     func_args["address_name"] = "Errachidia"
+            function_response = function_to_call(func_args["address_name"])
+        elif func_name == "search_product":
             # if not func_args["product_name"]:
             #     func_args["product_name"] = "Headphones"
             function_response = function_to_call(func_args["product_name"])

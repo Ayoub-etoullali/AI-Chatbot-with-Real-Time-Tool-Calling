@@ -12,7 +12,9 @@ user_inputs = [
     # General
     "Hi",
     "i need help",
-    # get_product_by_name
+    # get_current_weather
+    "give me the weather now in errachidia",
+    # search_product
     "give me Headphone products",
 ]
 
