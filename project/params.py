@@ -61,5 +61,5 @@ def generate_products():
     })
 
     # Save to CSV
-    STOCK.to_csv("../data/stock_data.csv", index=False)
+    STOCK.to_csv("../data/docs/csv/stock_data.csv", index=False)
     print("Generated stock_data.csv with 100 e-commerce products!")

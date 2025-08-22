@@ -1,9 +1,10 @@
 import requests, json, os
+from bs4 import BeautifulSoup
 from params import get_coords_from_address
 
-def get_current_weather(address):
-    """Get the current weather in a given city or address name"""
-    latitude, longitude = get_coords_from_address(address)
+def get_current_weather(city):
+    """Get the current weather in a given city"""
+    latitude, longitude = get_coords_from_address(city)
     base = "https://api.openweathermap.org/data/2.5/weather"
     key = os.environ['WEATHERMAP_API_KEY']
     request_url = f"{base}?lat={latitude}&lon={longitude}&appid={key}&units=metric"
@@ -58,6 +59,20 @@ def get_crypto_price(crypto_name: str) -> str:
 
     except Exception as e:
         return json.dumps({"error": f"Error: {str(e)}"})
+
+def get_info_from_portfolio() -> str:
+    """Retrieve information about Ayoub ETTOULLAI from his portfolio."""
+    url = "https://ayoub-etoullali.netlify.app/"
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    # Extract headings and paragraphs
+    headings = [h.text for h in soup.find_all(['h1', 'h2', 'h3'])]
+    paragraphs = [p.text for p in soup.find_all('p')]
+
+    # Combine results
+    info = headings + paragraphs
+    return json.dumps({"portfolio": info})
 
 def get_joke() -> str:
     """Return a random joke."""

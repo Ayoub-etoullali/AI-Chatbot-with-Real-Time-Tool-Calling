@@ -1,5 +1,5 @@
 import ollama, json
-from functions import get_current_weather, search_product, get_crypto_price, get_joke
+from functions import get_current_weather, search_product, get_crypto_price, get_info_from_portfolio, get_joke
 
 # --- Async assistant runner ---
 async def run(model: str, user_input: str):
@@ -10,9 +10,7 @@ async def run(model: str, user_input: str):
             'content': """
                 You are a helpful assistant. Only call tools if the user explicitly asks for:
                 **Weather**, **E-Commerce Products**, **Crypto Prices**, **Joke**.
-
-                Return the content exactly as is, without adding extra commentary. 
-                Do not mention datasets, tables, or add extra explanations.
+                When showing results from tools, answer briefly and clearly. 
                 If the user says something like 'hi', 'hello', or general chat, just respond normally without tools.
             """
         },
@@ -31,12 +29,12 @@ async def run(model: str, user_input: str):
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "address_name": {
+                        "city": {
                         "type": "string",
-                        "description": "The city or address name of a place",
+                        "description": "The city name of a place",
                         }
                     },
-                    "required": ["address_name"]
+                    "required": ["city"]
                 },
             },
         },
@@ -77,6 +75,13 @@ async def run(model: str, user_input: str):
         {
             "type": "function",
             "function": {
+                "name": "get_info_from_portfolio",
+                "description": "Retrieve information about Ayoub ETTOULLAI from his portfolio.",
+                }
+        },
+        {
+            "type": "function",
+            "function": {
                 "name": "get_joke",
                 "description": "Return a random joke.",
                 }
@@ -90,8 +95,8 @@ async def run(model: str, user_input: str):
     )
 
     if not response["message"].get("tool_calls"):
-        print("\nAssistant (No tool call):", response["message"]["content"])
-        return
+        print("\nAssistant (No tool call):")
+        return response["message"]["content"]
 
     messages.append(response["message"])
 
@@ -99,6 +104,7 @@ async def run(model: str, user_input: str):
         "get_current_weather": get_current_weather,
         "search_product": search_product,
         "get_crypto_price": get_crypto_price,
+        "get_info_from_portfolio": get_info_from_portfolio,
         "get_joke": get_joke
     }
 
@@ -109,9 +115,9 @@ async def run(model: str, user_input: str):
         function_to_call = available_functions[func_name]
         
         if func_name == "get_current_weather":
-            # if not func_args["address_name"]:
-            #     func_args["address_name"] = "Errachidia"
-            function_response = function_to_call(func_args["address_name"])
+            # if not func_args["city"]:
+            #     func_args["city"] = "Errachidia"
+            function_response = function_to_call(func_args["city"])
         elif func_name == "search_product":
             # if not func_args["product_name"]:
             #     func_args["product_name"] = "Headphones"
@@ -131,29 +137,33 @@ async def run(model: str, user_input: str):
     messages.append(
         {
             "role": "tool", 
-            "tool_name": func_name,
+            # "tool_name": func_name,
             "content": json.dumps(function_response)
         }
     )
 
-    messages = [
-        {
-            'role': 'system',
-            'content': """
-                You are a helpful assistant. Only call tools if the user explicitly asks for:
-                **Weather**, **E-Commerce Products**, **Crypto Prices**, **Joke**.
+    if func_name in ["get_joke"]:
+        messages = [
+            {
+                'role': 'system',
+                'content': """
+                    You are a helpful assistant. Only call tools if the user explicitly asks for:
+                    **Weather**, **E-Commerce Products**, **Crypto Prices**, **Joke**.
 
-                Do not mention datasets, tables, or add extra explanations.
-                If the user says something like 'hi', 'hello', or general chat, just respond normally without tools.
-            """
-        },
-        {
-            'role': 'user',
-            'content': f"""
-                Question: {user_input}
-                repharse well the Answer from "{function_response}" as a helpful assistant
-            """
-        }
-    ]
+                    Do not mention datasets, tables, or add extra explanations.
+                    If the user says something like 'hi', 'hello', or general chat, just respond normally without tools.
+                    Only rephrase the text. Output exactly what is required. Do not add commentary or suggestions.
+                """
+            },
+            {
+                'role': 'user',
+                'content': f"""
+                    Question: {user_input}
+                    as a helpful assistant, rephrase the following answer: "{function_response}" 
+                """
+            }
+        ]
+
     response = await client.chat(model=model, messages=messages)
-    print("\nAssistant (with tool call):", response["message"]["content"])
+    print("\nAssistant (with tool call):")
+    return response["message"]["content"]

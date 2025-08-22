@@ -10,18 +10,21 @@ from app import run
 
 user_inputs = [
     # General
-    # "Hi",
-    # "can you help me",
-    # get_current_weather
-    # "give me the weather now in errachidia",
-    # search_product
-    # "give me Headphone products",
-    # get_crypto_price
-    "give me the current price of BITCOIN",
+    # "Hello there!",
+    # "Could you assist me?",
+    # # get_current_weather
+    # "What’s the current weather like in Errachidia?",
+    # # search_product
+    # "Can you show me some headphone options?",
+    # # get_crypto_price
+    # "What’s the latest price of Bitcoin?",
+    # get_info_from_portfolio
+    "What is Ayoub ETOULLALI",
     # get_joke
-    "give me a joke"
+    # "Tell me a funny joke, please."
 ]
 
 for user_input in user_inputs:
     print("\nQuestion =>", user_input)
-    asyncio.run(run("llama3.2:3b", user_input))
+    response = asyncio.run(run("llama3.2:3b", user_input))
+    print(response)

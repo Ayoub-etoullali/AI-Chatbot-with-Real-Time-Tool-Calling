@@ -4,7 +4,7 @@ import pandas as pd
 app = Flask(__name__)
 
 # Load CSV once when the app starts
-stock_df = pd.read_csv("../data/stock_data.csv")
+stock_df = pd.read_csv("../data/docs/csv/stock_data.csv")
 
 @app.route("/search_product", methods=["GET"])
 def search_product():
